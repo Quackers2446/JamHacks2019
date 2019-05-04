@@ -14,8 +14,7 @@ endif
 
 
 run: clean
-	$(GORUN) $(TARGET)
-
+	
 ifeq ($(OS),Windows_NT)
 	echo "ON WINDOWS"
 else
