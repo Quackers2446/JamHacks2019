@@ -4,23 +4,20 @@ GOCLEAN=$(GOCMD) clean
 GOGET=$(GOCMD) get
 GORUN=$(GOCMD) run
 BINARY=ServerBin
-TARGET=Server/src/main/main.go
+TARGET=Server/gosrc/main/main.go
 TARGETOS=None
 EXTENSION=
 ifeq ($(TARGETOS), windows)
-	EXTENSION=.exe
+	BINARY=ServerBin.exe
 endif
 
-
+ifeq ($(OS),Windows_NT)
+	TARGET = Server\gosrc\main\main.go
+	BINARY = ServerBin.exe
+endif
 
 run: clean
-	
-ifeq ($(OS),Windows_NT)
-	echo "ON WINDOWS"
-else
-	echo "NOT WINDOWS"
-endif
-
+	$(GORUN) $(TARGET)
 
 build: $(TARGET) clean
 ifeq ($(TARGETOS),None)
