@@ -5,23 +5,30 @@ GOGET=$(GOCMD) get
 GORUN=$(GOCMD) run
 BINARY=ServerBin
 TARGET=Server/src/main/main.go
-OS=None
+TARGETOS=None
 EXTENSION=
-ifeq ($(OS), windows)
+ifeq ($(TARGETOS), windows)
 	EXTENSION=.exe
 endif
 
+
+
 run: clean
-	$(GORUN) $(TARGET)
+	
+ifeq ($(OS),Windows_NT)
+	echo "ON WINDOWS"
+else
+	echo "NOT WINDOWS"
+endif
 
 
 build: $(TARGET) clean
-ifeq ($(OS),None)
+ifeq ($(TARGETOS),None)
 	echo "Making Binary for current OS"
 	$(GOBUILD) -o $(BINARY) $(TARGET)
 else
-	echo "Making Binary for" $(OS)
-	GOOS=$(OS) $(GOBUILD) -o $(BINARY) $(TARGET)
+	echo "Making Binary for" $(TARGETOS)
+	GOOS=$(TARGETOS) $(GOBUILD) -o $(BINARY) $(TARGET)
 endif
 
 clean:
