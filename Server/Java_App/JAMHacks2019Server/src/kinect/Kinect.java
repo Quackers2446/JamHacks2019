@@ -5,26 +5,31 @@ import edu.ufl.digitalworlds.j4k.J4KSDK;
 
 public class Kinect extends J4KSDK {
 
-	private float[][] depthMap;
-
+	private static final float MAX_HEIGHT = 1.1049f;
+	private float[][] depthMap = null;
 	private boolean depthMapLoaded = false;
-
-	public Kinect() {
-		depthMap = new float[424][512];
-	}
 
 	@Override
 	public void onDepthFrameEvent(short[] depth_frame, byte[] player_index, float[] XYZ, float[] UV) {
 		DepthMap map = new DepthMap(512, 424, XYZ);
+		float[][] tempDepthMap = new float[424][512];
 		int index = 0;
 		for (int y = 0; y < getDepthHeight(); y++) {
 			for (int x = 0; x < getDepthWidth(); x++) {
-				float value = map.realZ[index];
-				depthMap[y][x] = value;
+				float value = 1.0f - (map.realZ[index]) / MAX_HEIGHT;
+				tempDepthMap[y][x] = value;
 				index++;
 			}
 		}
+		depthMap = tempDepthMap;
 		depthMapLoaded = true;
+	}
+
+	public float[][] popDepthMap() {
+		float[][] returnMap = depthMap;
+		depthMap = null;
+		depthMapLoaded = false;
+		return returnMap;
 	}
 
 	@Override

@@ -1,8 +1,8 @@
 package game;
 
 public class Point {
-	float x, y;
-	float height;
+	private float x, y;
+	private float height;
 
 	public Point(float x, float y, float height) {
 		this.x = x;
@@ -43,6 +43,18 @@ public class Point {
 		// unlike normal math. The positive y-axis points downwards, unlike in normal
 		// math.
 		return new Point(source.x + (float) Math.cos(angle), source.y - (float) Math.asin(angle), 0);
+	}
+
+	public float getX() {
+		return x;
+	}
+
+	public float getY() {
+		return y;
+	}
+
+	public float getHeight() {
+		return height;
 	}
 
 }
