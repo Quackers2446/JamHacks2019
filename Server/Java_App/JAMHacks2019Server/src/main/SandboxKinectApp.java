@@ -1,22 +1,27 @@
 package main;
 
 import edu.ufl.digitalworlds.j4k.J4KSDK;
+import kinect.DepthMapDataUpdater;
 import kinect.Kinect;
 import processing.core.PApplet;
+import processing.core.PImage;
 
 public class SandboxKinectApp extends PApplet {
 
 	private Kinect kinect;
 	// startX and startY will be the top-left corner of the
 	private int startX, startY;
-	private float[][] depthMap;
+	private DepthMapDataUpdater depthMapUpdater;
+	private PImage depthImage;
+	private boolean imageLoaded = false;
 
 	public static void main(String[] args) {
 		PApplet.main("main.SandboxKinectApp");
 	}
 
 	public void settings() {
-		fullScreen();
+//		fullScreen();
+		size(512, 424);
 	}
 
 	public void setup() {
@@ -25,27 +30,59 @@ public class SandboxKinectApp extends PApplet {
 		startY = (height - 848) / 2;
 		kinect = new Kinect();
 		kinect.start(J4KSDK.DEPTH | J4KSDK.XYZ);
+//		depthMapUpdater = new DepthMapDataUpdater(kinect);
+//		depthMapUpdater.start();
 	}
 
 	public void draw() {
-		background(0);
-		depthMap = kinect.getDepthMap();
-		displayDepthMap(depthMap);
+//		background(0);
+//		updateAndDisplayDepthMap();
+
+		background(255);
+		if (kinect.isDepthMapLoaded()) {
+			loadPixels();
+			for (int y = 0; y < 424; y++) {
+				int index = y * 512;
+				for (int x = 0; x < 512; x++) {
+//					float height = 1000 - map(kinect.getDepthMap()[y][x], 0, 1f, 0, 1000);
+//					int colourRange = (int) (height / 200);
+//					float rangeHeight = height % 200;
+//					int r, g, b;
+//					switch (colourRange) {
+//					case 0:
+//
+//						break;
+//					}
+					pixels[index] = color((int) map(kinect.getDepthMap()[y][x] - 0.4f, 0, 0.2f, 0, 255));
+//					System.out.println(pixels[index]);
+					index++;
+				}
+			}
+			updatePixels();
+		}
 	}
 
-	private void displayDepthMap(float[][] map) {
-		int rectX = startX;
-		int rectY = startY;
-		for (int y = 0; y < map.length; y++) {
-			for (int x = 0; x < map[y].length; x++) {
-				int colour = color(map(map[y][x], 0, 1, 0, 255));
-				fill(colour);
-				rect(rectX, rectY, 2, 2);
-				rectX += 2;
+	private void updateAndDisplayDepthMap() {
+		loadPixels();
+		if (depthMapUpdater.hasNewMap()) {
+
+			int[][] image = depthMapUpdater.getImage();
+			for (int i = 0; i < image.length; i++) {
+				int index = width * i;
+				for (int j = 0; j < image[i].length; j++) {
+					pixels[index] = image[i][j];
+				}
 			}
-			rectY += 2;
-			rectX = startX;
+//			System.out.println();
+//			depthImage = loadImage("res/depthImage.png");
+//			imageLoaded = true;
+			depthMapUpdater.resetHasNewMap();
 		}
+//		if (imageLoaded = true) {
+//			System.out.println("im an idiot");
+//			image(depthImage, 0, 0);
+//		}
+		updatePixels();
 	}
 
 }
