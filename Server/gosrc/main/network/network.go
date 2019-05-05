@@ -4,7 +4,10 @@ import (
 	"bufio"
 	"fmt"
 	"net"
+	"strconv"
 	"time"
+
+	"encoding/binary"
 
 	"../serverData"
 )
@@ -15,7 +18,7 @@ import (
 ////////////////////////////
 ////////////////////////////
 
-func ConnectionAcceptor(srv *serverData.Server, dataCh chan []byte, nameChan chan string, idChan chan byte) {
+func ConnectionAcceptor(srv *serverData.Server, dataCh chan []byte, nameChan chan string, idChan chan int) {
 	var err error
 
 	fmt.Println("Starting Server on Port", srv.Port+"...")
@@ -45,7 +48,7 @@ func ConnectionAcceptor(srv *serverData.Server, dataCh chan []byte, nameChan cha
 ////////////////////////////
 ////////////////////////////
 
-func handleConnection(conn net.Conn, ch chan []byte, nameChan chan string, idChan chan byte, srv *serverData.Server) {
+func handleConnection(conn net.Conn, ch chan []byte, nameChan chan string, idChan chan int, srv *serverData.Server) {
 	defer conn.Close()
 
 	bufReader := bufio.NewReader(conn)
@@ -63,13 +66,16 @@ func handleConnection(conn net.Conn, ch chan []byte, nameChan chan string, idCha
 		}
 
 		if !connectRequested {
-			nameChan <- string(bytes)
 			connectRequested = true
+			nameChan <- string(bytes)
 			id := <-idChan
 			defer func() {
-				ch <- []byte{id, 128}
+				buf := make([]byte, 4)
+				_ = binary.PutVarint(buf, int64(id))
+				bArray := append(buf, 128)
+				ch <- bArray
 			}()
-			conn.Write([]byte{id, '\n'})
+			conn.Write(append([]byte(strconv.Itoa(id)), '\n'))
 		} else {
 			ch <- bytes
 		}
