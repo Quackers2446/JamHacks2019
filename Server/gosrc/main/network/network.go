@@ -57,9 +57,6 @@ func handleConnection(conn net.Conn, ch chan []byte, nameChan chan string, idCha
 	for {
 		conn.SetReadDeadline(time.Now().Add(srv.TimeoutDuration))
 		bytes, _, err := bufReader.ReadLine()
-
-		fmt.Println("Received Data")
-
 		if err != nil {
 			fmt.Println(err)
 			return

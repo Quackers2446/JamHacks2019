@@ -51,7 +51,6 @@ func CommunicateData(srv *serverData.Server,
 
 		select {
 		case playerData := <-chByte:
-			fmt.Println("Player Data:", playerData)
 			id, _ := strconv.Atoi(string(playerData[0:1]))
 			dataInt, _ := strconv.Atoi(string(playerData[1:]))
 			data := byte(dataInt)
@@ -59,6 +58,7 @@ func CommunicateData(srv *serverData.Server,
 				srv.PlayerData[id].Movement = data
 			} else {
 				srv.PlayerData[id].Name = ""
+				ch <- srv.PlayerData[id]
 			}
 			DataUpdated = true
 
@@ -66,10 +66,7 @@ func CommunicateData(srv *serverData.Server,
 			sent := false
 			possibleID := -1
 
-			fmt.Println("Checking for availability for user", name)
-
 			for i := 0; i < len(srv.PlayerData); i++ {
-				fmt.Println("Checking is", srv.PlayerData[i].Name, "empty?")
 				if srv.PlayerData[i].Name == "" {
 					possibleID = i
 				} else if srv.PlayerData[i].Name == name {
@@ -79,7 +76,6 @@ func CommunicateData(srv *serverData.Server,
 				}
 
 				if possibleID >= 0 {
-					fmt.Println("Checking is", srv.PlayerData[i].Name, "the same as requent?")
 					for i := possibleID; i < len(srv.PlayerData); i++ {
 						if srv.PlayerData[i].Name == name {
 							possibleID = -1
@@ -105,8 +101,6 @@ func CommunicateData(srv *serverData.Server,
 				fmt.Println("Allowing", name, "to join the server as user", len(srv.PlayerData))
 				srv.PlayerData = append(srv.PlayerData, playerdata.Player{Name: name,
 					ID: len(srv.PlayerData)})
-
-				fmt.Println("PlayerData now has", len(srv.PlayerData), "clients")
 			}
 
 			DataUpdated = true
@@ -114,7 +108,9 @@ func CommunicateData(srv *serverData.Server,
 
 		if DataUpdated {
 			for i := 0; i < len(srv.PlayerData); i++ {
-				ch <- srv.PlayerData[i]
+				if srv.PlayerData[i].Name != "" {
+					ch <- srv.PlayerData[i]
+				}
 			}
 		}
 	}

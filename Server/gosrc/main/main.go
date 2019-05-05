@@ -18,7 +18,7 @@ func main() {
 	srv.TimeoutDuration = time.Second * 30
 	srv.Port = "3456"
 
-	cmd := exec.Command("java", srv.JavaAppPath)
+	cmd := exec.Command(os.Args[1], os.Args[2:]...)
 
 	dataCommChan := make(chan playerdata.Player)
 	byteCommChan := make(chan []byte)

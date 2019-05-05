@@ -1,6 +1,6 @@
 package playerdata
 
-import "encoding/binary"
+import "strconv"
 
 type Player struct {
 	ID       int
@@ -9,15 +9,8 @@ type Player struct {
 }
 
 func (p *Player) Marshal() []byte {
-	var result []byte
-	buf := make([]byte, 4)
-	_ = binary.PutVarint(buf, int64(p.ID))
-	bArray := append(buf, '\n')
-	result = append(result, bArray...)
-	result = append(result, ',')
-	result = append(result, p.Movement)
-	result = append(result, []byte(p.Name)...)
-	return result
+	resultString := strconv.Itoa(p.ID) + "," + strconv.Itoa(int(p.Movement)) + "," + p.Name
+	return []byte(resultString + "\n")
 }
 
 func Unmarshal(data []byte) *Player {
