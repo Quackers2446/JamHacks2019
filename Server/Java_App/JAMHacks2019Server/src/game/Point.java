@@ -42,7 +42,7 @@ public class Point {
 		// angle is from positive x-axis like in normal math, but going clockwise,
 		// unlike normal math. The positive y-axis points downwards, unlike in normal
 		// math.
-		return new Point(source.x + (float) Math.cos(angle), source.y - (float) Math.asin(angle), 0);
+		return new Point(source.x + (float) Math.cos(angle), source.y - (float) Math.sin(angle), 0);
 	}
 
 	public float getX() {

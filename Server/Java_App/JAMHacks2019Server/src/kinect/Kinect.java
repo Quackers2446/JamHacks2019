@@ -5,7 +5,6 @@ import edu.ufl.digitalworlds.j4k.J4KSDK;
 
 public class Kinect extends J4KSDK {
 
-	private static final float MAX_HEIGHT = 1.1049f;
 	private float[][] depthMap = null;
 	private boolean depthMapLoaded = false;
 
@@ -16,7 +15,8 @@ public class Kinect extends J4KSDK {
 		int index = 0;
 		for (int y = 0; y < getDepthHeight(); y++) {
 			for (int x = 0; x < getDepthWidth(); x++) {
-				float value = 1.0f - (map.realZ[index]) / MAX_HEIGHT;
+//				float value = 1.0f - (map.realZ[index]) / MAX_HEIGHT;
+				float value = 1.0f - (map.realZ[index] - 0.50f) / 0.14f; // Change this equation to adjust readings.
 				tempDepthMap[y][x] = value;
 				index++;
 			}
