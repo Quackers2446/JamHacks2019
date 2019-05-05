@@ -1,7 +1,6 @@
 package main;
 
 import edu.ufl.digitalworlds.j4k.J4KSDK;
-import game.Player;
 import kinect.DepthMapDataUpdater;
 import kinect.Kinect;
 import processing.core.PApplet;
@@ -10,8 +9,7 @@ public class SandboxKinectApp extends PApplet {
 
 	private Kinect kinect;
 	private DepthMapDataUpdater depthMapUpdater;
-	Player mainPlayer;
-	Player secondaryPlayer;
+	private GameDataHandlerThread gameDataHandler;
 
 	public static void main(String[] args) {
 		PApplet.main("main.SandboxKinectApp");
@@ -27,9 +25,8 @@ public class SandboxKinectApp extends PApplet {
 		kinect.start(J4KSDK.DEPTH | J4KSDK.XYZ);
 		depthMapUpdater = new DepthMapDataUpdater(kinect);
 		depthMapUpdater.start();
-		mainPlayer = new Player(this, depthMapUpdater, 100, 100, "Donny", 1);
-		secondaryPlayer = new Player(this, depthMapUpdater, 200, 200, "Kegan", 2);
-//		secondaryPlayer.setAngle(3924823);
+		gameDataHandler = new GameDataHandlerThread(this, depthMapUpdater);
+		gameDataHandler.start();
 		background(0);
 	}
 
@@ -37,14 +34,8 @@ public class SandboxKinectApp extends PApplet {
 		pushMatrix();
 		translate(115, 10);
 		updateAndDisplayDepthMap();
-		mainPlayer.move();
-		mainPlayer.update();
-		mainPlayer.display();
-		secondaryPlayer.move();
-		secondaryPlayer.update();
-		secondaryPlayer.display();
+		gameDataHandler.displayEntities();
 		popMatrix();
-		System.out.println("===================");
 //		simpleMapDisplay();
 	}
 

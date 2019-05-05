@@ -14,8 +14,8 @@ public class DepthMapDataUpdater extends Thread {
 	private static final int START_READ_PIXEL_Y = 31;
 	private static final int NUM_READ_PIXELS_X = 248;
 	private static final int NUM_READ_PIXELS_Y = 248;
-	private static final int MAP_PIXEL_SIZE_X = 576;
-	private static final int MAP_PIXEL_SIZE_Y = 576;
+	public static final int MAP_PIXEL_SIZE_X = 576;
+	public static final int MAP_PIXEL_SIZE_Y = 576;
 	private static final float UNIT_SIZE_X = (float) MAP_PIXEL_SIZE_X / (NUM_READ_PIXELS_X + 0.2f);
 	private static final float UNIT_SIZE_Y = (float) MAP_PIXEL_SIZE_Y / (NUM_READ_PIXELS_Y + 0.2f);
 	private float[][] depthMap = new float[NUM_READ_PIXELS_X][NUM_READ_PIXELS_Y];

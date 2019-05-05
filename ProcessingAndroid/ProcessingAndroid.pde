@@ -1,7 +1,7 @@
 String text;
 
 void setup(){
-    NetworkUtils.initializeSocket("192.168.1.25", 3456, "Donny");
+    NetworkUtils.initializeSocket("192.168.1.51", 3456, "Donny");
     text = "HI";
     orientation(LANDSCAPE);
     fullScreen();

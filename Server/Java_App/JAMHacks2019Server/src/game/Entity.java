@@ -39,4 +39,8 @@ public abstract class Entity {
 	public PApplet getApplet() {
 		return applet;
 	}
+
+	public void update(int movementData) {
+
+	}
 }
