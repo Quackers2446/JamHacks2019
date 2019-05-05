@@ -74,6 +74,7 @@ func handleConnection(conn net.Conn, ch chan []byte, nameChan chan string, idCha
 			}()
 			conn.Write(append([]byte(strconv.Itoa(id)), '\n'))
 		} else {
+			fmt.Println("Data received:", string(bytes))
 			ch <- bytes
 		}
 	}
