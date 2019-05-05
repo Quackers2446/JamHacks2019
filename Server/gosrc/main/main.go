@@ -15,7 +15,7 @@ func main() {
 	srv := &serverData.Server{}
 	sep := string(os.PathSeparator)
 	srv.JavaAppPath = "Server" + sep + "Java_App" + sep + "Temp.TEMPAPP"
-	srv.TimeoutDuration = time.Second * 10
+	srv.TimeoutDuration = time.Second * 30
 	srv.Port = "3456"
 
 	cmd := exec.Command("java", srv.JavaAppPath)
@@ -23,7 +23,7 @@ func main() {
 	dataCommChan := make(chan playerdata.Player)
 	byteCommChan := make(chan []byte)
 	nameChan := make(chan string)
-	idChan := make(chan byte)
+	idChan := make(chan int)
 
 	defer func() {
 		close(dataCommChan)

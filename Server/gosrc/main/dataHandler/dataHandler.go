@@ -3,6 +3,7 @@ package dataHandler
 import (
 	"fmt"
 	"os/exec"
+	"strconv"
 
 	"../serverData"
 	"../serverData/playerdata"
@@ -37,7 +38,12 @@ func UpdateData(srv *serverData.Server, cmd *exec.Cmd, ch chan playerdata.Player
 ////////////////////////////
 ////////////////////////////
 
-func CommunicateData(srv *serverData.Server, ch chan playerdata.Player, chByte chan []byte, nameChan chan string, idChan chan byte) {
+func CommunicateData(srv *serverData.Server,
+	ch chan playerdata.Player,
+	chByte chan []byte,
+	nameChan chan string,
+	idChan chan int) {
+
 	defer srv.Wg.Done()
 
 	for {
@@ -45,8 +51,10 @@ func CommunicateData(srv *serverData.Server, ch chan playerdata.Player, chByte c
 
 		select {
 		case playerData := <-chByte:
-			id := playerData[0]
-			data := playerData[1]
+			fmt.Println("Player Data:", playerData)
+			id, _ := strconv.Atoi(string(playerData[0:1]))
+			dataInt, _ := strconv.Atoi(string(playerData[1:]))
+			data := byte(dataInt)
 			if data <= 127 {
 				srv.PlayerData[id].Movement = data
 			} else {
@@ -57,14 +65,21 @@ func CommunicateData(srv *serverData.Server, ch chan playerdata.Player, chByte c
 		case name := <-nameChan:
 			sent := false
 			possibleID := -1
+
+			fmt.Println("Checking for availability for user", name)
+
 			for i := 0; i < len(srv.PlayerData); i++ {
+				fmt.Println("Checking is", srv.PlayerData[i].Name, "empty?")
 				if srv.PlayerData[i].Name == "" {
 					possibleID = i
 				} else if srv.PlayerData[i].Name == name {
+					possibleID = -1
+					sent = true
 					break
 				}
 
 				if possibleID >= 0 {
+					fmt.Println("Checking is", srv.PlayerData[i].Name, "the same as requent?")
 					for i := possibleID; i < len(srv.PlayerData); i++ {
 						if srv.PlayerData[i].Name == name {
 							possibleID = -1
@@ -76,17 +91,22 @@ func CommunicateData(srv *serverData.Server, ch chan playerdata.Player, chByte c
 
 			}
 			if possibleID >= 0 {
-				srv.PlayerData[possibleID].ID = byte(possibleID)
+				println("Allowing", name, "to join the server as user", possibleID)
+				srv.PlayerData[possibleID].ID = possibleID
 				srv.PlayerData[possibleID].Movement = 0
 				srv.PlayerData[possibleID].Name = name
-				idChan <- byte(possibleID)
+				idChan <- possibleID
 				sent = true
 
 			}
 
-			if sent {
-				srv.PlayerData = append(srv.PlayerData, playerdata.Player{Name: name, ID: byte(len(srv.PlayerData))})
-				idChan <- byte(len(srv.PlayerData))
+			if !sent {
+				idChan <- len(srv.PlayerData)
+				fmt.Println("Allowing", name, "to join the server as user", len(srv.PlayerData))
+				srv.PlayerData = append(srv.PlayerData, playerdata.Player{Name: name,
+					ID: len(srv.PlayerData)})
+
+				fmt.Println("PlayerData now has", len(srv.PlayerData), "clients")
 			}
 
 			DataUpdated = true
