@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"fmt"
 	"net"
-	"os"
 	"os/exec"
 	"strconv"
 	"sync"
@@ -24,10 +23,10 @@ func main() {
 	timeoutDuration = time.Second * 10
 	srv := &server{}
 
-	sep := string(os.PathSeparator)
-	srv.javaAppPath = "Server" + sep + "Java_App" + sep + "Temp.TEMPAPP"
+	// sep := string(os.PathSeparator)
+	srv.javaAppPath = "TempApp.jar"
 
-	cmd := exec.Command("java", srv.javaAppPath)
+	cmd := exec.Command("java","-jar", srv.javaAppPath)
 
 	// dataInChan := make(chan int)
 	dataCommChan := make(chan int)
