@@ -2,7 +2,6 @@ package dataHandler
 
 import (
 	"fmt"
-	"net"
 	"os/exec"
 
 	"../serverData"
@@ -38,39 +37,65 @@ func UpdateData(srv *serverData.Server, cmd *exec.Cmd, ch chan playerdata.Player
 ////////////////////////////
 ////////////////////////////
 
-func CommunicateData(srv *serverData.Server, ch chan playerdata.Player, chByte chan []byte, ipChan chan net.Addr, idChan chan byte) {
+func CommunicateData(srv *serverData.Server, ch chan playerdata.Player, chByte chan []byte, nameChan chan string, idChan chan byte) {
 	defer srv.Wg.Done()
-	defer func() {
-		close(ch)
-	}()
 
 	for {
+		DataUpdated := false
+
 		select {
 		case playerData := <-chByte:
 			id := playerData[0]
 			data := playerData[1]
-			srv.PlayerData[id].Movement = data
+			if data <= 127 {
+				srv.PlayerData[id].Movement = data
+			} else {
+				srv.PlayerData[id].Name = ""
+			}
+			DataUpdated = true
 
-		case addr := <-ipChan:
+		case name := <-nameChan:
 			sent := false
+			possibleID := -1
 			for i := 0; i < len(srv.PlayerData); i++ {
-				if srv.PlayerData[i].Addr == nil {
-					srv.PlayerData[i].Addr = addr
-					srv.PlayerData[i].ID = byte(i)
-					srv.PlayerData[i].Movement = 0
-					idChan <- byte(i)
-					sent = true
+				if srv.PlayerData[i].Name == "" {
+					possibleID = i
+				} else if srv.PlayerData[i].Name == name {
+					break
 				}
+
+				if possibleID >= 0 {
+					for i := possibleID; i < len(srv.PlayerData); i++ {
+						if srv.PlayerData[i].Name == name {
+							possibleID = -1
+							sent = true
+							break
+						}
+					}
+				}
+
+			}
+			if possibleID >= 0 {
+				srv.PlayerData[possibleID].ID = byte(possibleID)
+				srv.PlayerData[possibleID].Movement = 0
+				srv.PlayerData[possibleID].Name = name
+				idChan <- byte(possibleID)
+				sent = true
+
 			}
 
-			if !sent {
-				srv.PlayerData = append(srv.PlayerData, playerdata.Player{Addr: addr, ID: byte(len(srv.PlayerData))})
+			if sent {
+				srv.PlayerData = append(srv.PlayerData, playerdata.Player{Name: name, ID: byte(len(srv.PlayerData))})
 				idChan <- byte(len(srv.PlayerData))
 			}
+
+			DataUpdated = true
 		}
 
-		for i := 0; i < len(srv.PlayerData); i++ {
-			ch <- srv.PlayerData[i]
+		if DataUpdated {
+			for i := 0; i < len(srv.PlayerData); i++ {
+				ch <- srv.PlayerData[i]
+			}
 		}
 	}
 

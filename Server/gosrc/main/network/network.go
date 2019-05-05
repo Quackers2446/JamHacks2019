@@ -15,7 +15,7 @@ import (
 ////////////////////////////
 ////////////////////////////
 
-func ConnectionAcceptor(srv *serverData.Server, dataCh chan []byte, ipChan chan net.Addr, idChan chan byte) {
+func ConnectionAcceptor(srv *serverData.Server, dataCh chan []byte, nameChan chan string, idChan chan byte) {
 	var err error
 
 	fmt.Println("Starting Server on Port", srv.Port+"...")
@@ -31,7 +31,7 @@ func ConnectionAcceptor(srv *serverData.Server, dataCh chan []byte, ipChan chan 
 			fmt.Println(err)
 			panic("Error in accepting connection.")
 		}
-		go handleConnection(connection, dataCh, ipChan, idChan, srv)
+		go handleConnection(connection, dataCh, nameChan, idChan, srv)
 	}
 
 }
@@ -42,7 +42,7 @@ func ConnectionAcceptor(srv *serverData.Server, dataCh chan []byte, ipChan chan 
 ////////////////////////////
 ////////////////////////////
 
-func handleConnection(conn net.Conn, ch chan []byte, ipChan chan net.Addr, idChan chan byte, srv *serverData.Server) {
+func handleConnection(conn net.Conn, ch chan []byte, nameChan chan string, idChan chan byte, srv *serverData.Server) {
 	defer conn.Close()
 
 	bufReader := bufio.NewReader(conn)
@@ -57,9 +57,12 @@ func handleConnection(conn net.Conn, ch chan []byte, ipChan chan net.Addr, idCha
 		}
 
 		if !connectRequested {
-			ipChan <- conn.RemoteAddr()
+			nameChan <- string(bytes)
 			connectRequested = true
 			id := <-idChan
+			defer func() {
+				ch <- []byte{id, 128}
+			}()
 			conn.Write([]byte{id, '\n'})
 		} else {
 			ch <- bytes

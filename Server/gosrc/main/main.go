@@ -1,7 +1,6 @@
 package main
 
 import (
-	"net"
 	"os"
 	"os/exec"
 	"time"
@@ -23,12 +22,19 @@ func main() {
 
 	dataCommChan := make(chan playerdata.Player)
 	byteCommChan := make(chan []byte)
-	ipChan := make(chan net.Addr)
+	nameChan := make(chan string)
 	idChan := make(chan byte)
+
+	defer func() {
+		close(dataCommChan)
+		close(byteCommChan)
+		close(nameChan)
+		close(idChan)
+	}()
 
 	srv.Wg.Add(3)
 	go dataHandler.UpdateData(srv, cmd, dataCommChan)
-	go network.ConnectionAcceptor(srv, byteCommChan, ipChan, idChan)
-	go dataHandler.CommunicateData(srv, dataCommChan, byteCommChan, ipChan, idChan)
+	go network.ConnectionAcceptor(srv, byteCommChan, nameChan, idChan)
+	go dataHandler.CommunicateData(srv, dataCommChan, byteCommChan, nameChan, idChan)
 	srv.Wg.Wait()
 }
