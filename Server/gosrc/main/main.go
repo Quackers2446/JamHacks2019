@@ -1,138 +1,34 @@
 package main
 
 import (
-	"bufio"
-	"fmt"
 	"net"
 	"os"
 	"os/exec"
-	"strconv"
-	"sync"
 	"time"
+
+	"./dataHandler"
+	"./network"
+	"./serverData"
+	"./serverData/playerdata"
 )
 
-type server struct {
-	wg          sync.WaitGroup
-	timeData    int
-	javaAppPath string
-}
-
-var timeoutDuration time.Duration
-
 func main() {
-	PORT := "3456"
-	timeoutDuration = time.Second * 10
-	srv := &server{}
-
+	srv := &serverData.Server{}
 	sep := string(os.PathSeparator)
-	srv.javaAppPath = "Server" + sep + "Java_App" + sep + "Temp.TEMPAPP"
+	srv.JavaAppPath = "Server" + sep + "Java_App" + sep + "Temp.TEMPAPP"
+	srv.TimeoutDuration = time.Second * 10
+	srv.Port = "3456"
 
-	cmd := exec.Command("java", srv.javaAppPath)
+	cmd := exec.Command("java", srv.JavaAppPath)
 
-	// dataInChan := make(chan int)
-	dataCommChan := make(chan int)
+	dataCommChan := make(chan playerdata.Player)
+	byteCommChan := make(chan []byte)
+	ipChan := make(chan net.Addr)
+	idChan := make(chan byte)
 
-	srv.wg.Add(3)
-	go srv.updateData(cmd, dataCommChan)
-	go srv.connectionAcceptor(PORT, dataCommChan)
-	go srv.communicateData(dataCommChan)
-	srv.wg.Wait()
-}
-
-func (srv *server) updateData(cmd *exec.Cmd, ch chan int) {
-	defer srv.wg.Done()
-
-	outPipe, err := cmd.StdoutPipe()
-	bufReader := bufio.NewReader(outPipe)
-
-	defer outPipe.Close()
-
-	if err != nil {
-		fmt.Println(err)
-		panic("Did not get Pipe")
-	}
-
-	err = cmd.Start()
-	if err != nil {
-		fmt.Println(err)
-		panic("Something went wrong with initializing command!")
-	}
-
-	for {
-		data, _, err := bufReader.ReadLine()
-		if err != nil {
-			fmt.Println(err)
-			panic("Something went wrong with the pipe!")
-		}
-		if len(data) >= 1 {
-			s := string(data)
-			fmt.Println("In Updater:", s)
-			i, _ := strconv.Atoi(s)
-			ch <- i
-			i2 := <-ch
-			fmt.Println("Back Message", i2)
-		}
-	}
-
-}
-
-////////////////////////////
-////////////////////////////
-//connection Acceptor: the goroutine to accept connections to server and pass them onto other goroutines
-////////////////////////////
-////////////////////////////
-
-func (srv *server) connectionAcceptor(port string, dataCh chan int) {
-	defer srv.wg.Done()
-
-	fmt.Println("Starting Server on Port", port+"...")
-	socket, err := net.Listen("tcp", ":"+port)
-	if err != nil {
-		panic("Server Failed to Initialize")
-	}
-	fmt.Println("Successfully Launched Server!")
-
-	for {
-		connection, err := socket.Accept()
-		if err != nil {
-			fmt.Println(err)
-			panic("Error in accepting connection.")
-		}
-		go srv.handleConnection(connection, dataCh)
-	}
-
-}
-
-////////////////////////////
-////////////////////////////
-//connection Handler: Goroutine function that will allow to receive and send data to clients
-////////////////////////////
-////////////////////////////
-
-func (srv *server) handleConnection(conn net.Conn, ch chan int) {
-	defer conn.Close()
-
-}
-
-////////////////////////////
-////////////////////////////
-//Data Comm: Worker to manage the channels to data
-////////////////////////////
-////////////////////////////
-
-func (srv *server) communicateData(ch chan int) {
-	defer srv.wg.Done()
-	defer func() {
-		close(ch)
-	}()
-
-	for {
-		select {
-		case newData := <-ch:
-			srv.timeData = newData
-		case ch <- srv.timeData:
-
-		}
-	}
-
+	srv.Wg.Add(3)
+	go dataHandler.UpdateData(srv, cmd, dataCommChan)
+	go network.ConnectionAcceptor(srv, byteCommChan, ipChan, idChan)
+	go dataHandler.CommunicateData(srv, dataCommChan, byteCommChan, ipChan, idChan)
+	srv.Wg.Wait()
 }
