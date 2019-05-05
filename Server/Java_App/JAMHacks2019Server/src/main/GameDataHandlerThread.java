@@ -1,8 +1,8 @@
 package main;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Scanner;
 
 import game.Player;
 import kinect.DepthMapDataUpdater;
@@ -13,26 +13,20 @@ public class GameDataHandlerThread extends Thread {
 	private HashMap<Integer, Player> players = new HashMap<>();
 	private PApplet pApplet;
 	private DepthMapDataUpdater depthMapUpdater;
-	private Scanner scanner;
-
+	private ArrayList<String> actionData = new ArrayList<>();
+	
 	public GameDataHandlerThread(PApplet applet, DepthMapDataUpdater depthMapUpdater) {
-		scanner = new Scanner(System.in);
 		pApplet = applet;
 		this.depthMapUpdater = depthMapUpdater;
 	}
 
 	public void run() {
 		while (true) {
-			System.out.println("hi3");
-			try {
-				while (System.in.available() > 0) {
-					System.out.println("hiw");
-					parseLine(scanner.nextLine());
-				}
-			} catch (IOException e) {
-				e.printStackTrace();
+			if(actionData.isEmpty()) {
+				sleep(10);				
+			}else {
+				parseLine(actionData.remove(0));
 			}
-			sleep(1);
 		}
 	}
 
@@ -71,6 +65,17 @@ public class GameDataHandlerThread extends Thread {
 		} catch (InterruptedException e) {
 			System.out.println("oh no");
 			e.printStackTrace();
+		}
+	}
+	
+	public static int requestIndex(String name) {
+		//Check through players to see if there is available current ID, and for  duplicate names
+		return 0;
+	}
+
+	public void parseData(String[] data) {
+		for(String action: data) {
+			actionData.add(action);
 		}
 	}
 

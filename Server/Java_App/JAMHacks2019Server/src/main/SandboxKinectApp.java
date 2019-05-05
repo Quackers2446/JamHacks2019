@@ -3,6 +3,7 @@ package main;
 import edu.ufl.digitalworlds.j4k.J4KSDK;
 import kinect.DepthMapDataUpdater;
 import kinect.Kinect;
+import networking.SandboxServer;
 import processing.core.PApplet;
 
 public class SandboxKinectApp extends PApplet {
@@ -10,6 +11,7 @@ public class SandboxKinectApp extends PApplet {
 	private Kinect kinect;
 	private DepthMapDataUpdater depthMapUpdater;
 	private GameDataHandlerThread gameDataHandler;
+	private SandboxServer sandboxServer;
 
 	public static void main(String[] args) {
 		PApplet.main("main.SandboxKinectApp");
@@ -27,6 +29,8 @@ public class SandboxKinectApp extends PApplet {
 		depthMapUpdater.start();
 		gameDataHandler = new GameDataHandlerThread(this, depthMapUpdater);
 		gameDataHandler.start();
+		sandboxServer = new SandboxServer(3456);
+		sandboxServer.start();
 		background(0);
 	}
 
@@ -34,6 +38,7 @@ public class SandboxKinectApp extends PApplet {
 		pushMatrix();
 		translate(115, 10);
 		updateAndDisplayDepthMap();
+		gameDataHandler.parseData(sandboxServer.getData());
 		gameDataHandler.displayEntities();
 		popMatrix();
 //		simpleMapDisplay();
