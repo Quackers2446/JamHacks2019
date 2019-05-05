@@ -1,9 +1,20 @@
 package game;
 
+import processing.core.PApplet;
+
 public abstract class Entity {
 
 	private Point location;
-	private float angle;
+	private float angle = 0;
+	private PApplet applet;
+	@SuppressWarnings("unused")
+	private int id;
+
+	public Entity(PApplet pApplet, Point location, int playerID) {
+		applet = pApplet;
+		this.id = playerID;
+		this.location = location;
+	}
 
 	public abstract void update();
 
@@ -25,4 +36,7 @@ public abstract class Entity {
 		this.location = location;
 	}
 
+	public PApplet getApplet() {
+		return applet;
+	}
 }

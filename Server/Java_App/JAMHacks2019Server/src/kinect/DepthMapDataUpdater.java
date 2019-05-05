@@ -1,11 +1,8 @@
 package kinect;
 
 import java.awt.Color;
-import java.awt.image.BufferedImage;
-import java.io.File;
-import java.io.IOException;
 
-import javax.imageio.ImageIO;
+import game.Point;
 
 public class DepthMapDataUpdater extends Thread {
 
@@ -13,102 +10,112 @@ public class DepthMapDataUpdater extends Thread {
 	private boolean hasNewMap = false;
 	// Map sizes in pixels; will have to use trial and error to determine the best
 	// values.
-	private static final int MAP_SIZE_X = 1000;
-	private static final int MAP_SIZE_Y = 800;
-	private static final float PIXEL_SIZE_X = (float) MAP_SIZE_X / (float) 512;
-	private static final float PIXEL_SIZE_Y = (float) MAP_SIZE_Y / (float) 424;
-	private float[][] depthMap = new float[424][512];
-	private int[][] image = new int[MAP_SIZE_Y][MAP_SIZE_X];
+	private static final int START_READ_PIXEL_X = 188;
+	private static final int START_READ_PIXEL_Y = 31;
+	private static final int NUM_READ_PIXELS_X = 248;
+	private static final int NUM_READ_PIXELS_Y = 248;
+	private static final int MAP_PIXEL_SIZE_X = 576;
+	private static final int MAP_PIXEL_SIZE_Y = 576;
+	private static final float UNIT_SIZE_X = (float) MAP_PIXEL_SIZE_X / (NUM_READ_PIXELS_X + 0.2f);
+	private static final float UNIT_SIZE_Y = (float) MAP_PIXEL_SIZE_Y / (NUM_READ_PIXELS_Y + 0.2f);
+	private float[][] depthMap = new float[NUM_READ_PIXELS_X][NUM_READ_PIXELS_Y];
+	private float[][] heightMap = new float[MAP_PIXEL_SIZE_Y][MAP_PIXEL_SIZE_X];
+	private int[][] image = new int[MAP_PIXEL_SIZE_Y][MAP_PIXEL_SIZE_X];
 
-	private final Color[] SEA_COLOURS = new Color[] { new Color(21, 101, 192), new Color(100, 181, 246) };
-	private final Color[] LAND_COLOURS = new Color[] { new Color(67, 160, 71), new Color(255, 238, 88),
-			new Color(244, 67, 54) };
-	private final float seaLevel = 0.3f;
+	private static final Color[] SEA_COLOURS = new Color[] { new Color(21, 101, 192), new Color(100, 181, 246) };
+	private static final Color[] LAND_COLOURS = new Color[] { new Color(173, 255, 47), new Color(154, 205, 50),
+			new Color(67, 160, 71), new Color(255, 255, 51), new Color(255, 165, 0), new Color(255, 69, 0) };
+	public static final float SEA_LEVEL = 0.1f;
 
 	private float[][] depthMapGaussianMatrix;
 	private float[][] colourMapGaussianMatrix;
 
 	public DepthMapDataUpdater(Kinect k) {
 		kinect = k;
-		depthMapGaussianMatrix = generateWeightMatrix(5, 2);
-		colourMapGaussianMatrix = generateWeightMatrix(9, 2);
+		depthMapGaussianMatrix = generateWeightMatrix(3, 1.2f);
+		colourMapGaussianMatrix = generateWeightMatrix(3, 1.2f);
 	}
 
 	public void run() {
-		if (kinect.isDepthMapLoaded()) {
-//			System.out.println("hi");
-			updateMapsAndImages();
-			System.out.println("loaded");
-			hasNewMap = true;
+		while (true) {
+			if (kinect.isDepthMapLoaded()) {
+				updateMapsAndImages();
+				hasNewMap = true;
+			}
+			sleep(10);
 		}
-		sleep(10);
+	}
+
+	public float getHeight(Point location) {
+		try {
+			return heightMap[(int) location.getY()][(int) location.getX()];
+		} catch (Exception e) {
+			return -1;
+		}
 	}
 
 	private void updateMapsAndImages() {
-		depthMap = kinect.popDepthMap();
-		depthMap = applyGaussianBlurOnHeights(depthMap, depthMapGaussianMatrix);
+		float[][] rawMap = kinect.popDepthMap();
+		for (int i = 0; i < NUM_READ_PIXELS_Y; i++) {
+			for (int j = 0; j < NUM_READ_PIXELS_X; j++) {
+				depthMap[i][j] = rawMap[i + START_READ_PIXEL_Y][j + START_READ_PIXEL_X];
+			}
+		}
+//		depthMap = applyGaussianBlurOnHeights(depthMap, depthMapGaussianMatrix);
 		int xIndex = 0, yIndex = 0;
 		int xOffset = 0, yOffset = 0;
-		for (int i = 0; i < MAP_SIZE_Y; i++) {
+		for (int i = 0; i < MAP_PIXEL_SIZE_Y; i++) {
 			xOffset = 0;
-			for (int j = 0; j < MAP_SIZE_X; j++) {
+			xIndex = 0;
+			for (int j = 0; j < MAP_PIXEL_SIZE_X; j++) {
 				xOffset++;
-				if (xOffset > PIXEL_SIZE_X) {
-					xOffset -= PIXEL_SIZE_X;
+				if (xOffset > UNIT_SIZE_X) {
+					xOffset -= UNIT_SIZE_X;
 					xIndex++;
 				}
+//				System.out.println(j + " " + xIndex);
+				heightMap[i][j] = depthMap[yIndex][xIndex];
 				image[i][j] = getColourByHeight(depthMap[yIndex][xIndex]);
 			}
 			yOffset++;
-			if (yOffset > PIXEL_SIZE_Y) {
-				yOffset -= PIXEL_SIZE_Y;
+			if (yOffset > UNIT_SIZE_Y) {
+				yOffset -= UNIT_SIZE_Y;
 				yIndex++;
 			}
 		}
-		image = applyGaussianBlurOnColours(image, colourMapGaussianMatrix);
-		createImage();
-	}
-
-	private void createImage() {
-		BufferedImage img = new BufferedImage(MAP_SIZE_X, MAP_SIZE_Y, BufferedImage.TYPE_INT_RGB);
-		for (int i = 0; i < image.length; i++) {
-			for (int j = 0; j < image[i].length; j++) {
-				img.setRGB(i, j, image[i][j]);
-			}
-		}
-		File outputFile = new File("res/depthImage.png");
-		try {
-			ImageIO.write(img, "png", outputFile);
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
+//		image = applyGaussianBlurOnColours(image, colourMapGaussianMatrix);
 	}
 
 	// The value of height is normalized.
 	private int getColourByHeight(float height) {
 		float percentage;
-		float r, g, b;
+		int r, g, b;
 		Color colour2, colour1;
-
-		if (height < seaLevel) {
-			float strataSize = seaLevel / SEA_COLOURS.length;
-			int strata = (int) (height / strataSize);
-			percentage = height % strataSize;
-			colour2 = SEA_COLOURS[strata + 1];
-			colour1 = SEA_COLOURS[strata];
-		} else {
-			float strataSize = (1 - seaLevel) / LAND_COLOURS.length;
-			int strata = (int) ((height - seaLevel) / strataSize);
-			percentage = (height - seaLevel) % strataSize;
-			colour2 = LAND_COLOURS[strata + 1];
-			colour1 = LAND_COLOURS[strata];
+		try {
+			if (height < SEA_LEVEL) {
+				float strataSize = SEA_LEVEL / SEA_COLOURS.length - 1;
+				int strata = (int) (height / strataSize);
+				percentage = (height % strataSize) / strataSize;
+//			System.out.println(seaLevel + " " + strata + " " + strataSize);
+				colour2 = SEA_COLOURS[strata + 1];
+				colour1 = SEA_COLOURS[strata];
+			} else {
+				float strataSize = (1 - SEA_LEVEL) / LAND_COLOURS.length - 1;
+				strataSize = 0.09f;
+				int strata = (int) ((height - SEA_LEVEL) / strataSize);
+				percentage = ((height - SEA_LEVEL) % strataSize) / strataSize;
+				colour2 = LAND_COLOURS[strata + 1];
+				colour1 = LAND_COLOURS[strata];
+			}
+		} catch (Exception e) {
+			return 0;
 		}
-
-		r = colour1.getRed() + (colour2.getRed() - colour1.getRed()) * percentage;
-		g = colour1.getGreen() + (colour2.getGreen() - colour1.getGreen()) * percentage;
-		b = colour1.getBlue() + (colour2.getBlue() - colour1.getBlue()) * percentage;
-
+//		System.out.println(colour1.getRed() + " " + colour2.getRed() + " " + percentage);
+		r = (int) (colour1.getRed() + (colour2.getRed() - colour1.getRed()) * percentage);
+		g = (int) (colour1.getGreen() + (colour2.getGreen() - colour1.getGreen()) * percentage);
+		b = (int) (colour1.getBlue() + (colour2.getBlue() - colour1.getBlue()) * percentage);
 		return new Color(r, g, b).getRGB();
+//		return colour2.getRGB();
 	}
 
 	public boolean hasNewMap() {
@@ -138,7 +145,6 @@ public class DepthMapDataUpdater extends Thread {
 							float currentWeight = weights[y][x];
 							heights[y][x] = currentWeight * data[sampleY][sampleX];
 						} catch (Exception e) {
-							System.out.println("out of bounds");
 						}
 					}
 				}
@@ -161,14 +167,17 @@ public class DepthMapDataUpdater extends Thread {
 						int sampleX = i + x - size / 2;
 						int sampleY = i + x - size / 2;
 						float currentWeight = weights[y][x];
-						Color sampledColour = new Color(data[sampleY][sampleX]);
-						red[y][x] = currentWeight * sampledColour.getRed();
-						green[y][x] = currentWeight * sampledColour.getGreen();
-						blue[y][x] = currentWeight * sampledColour.getBlue();
+						try {
+							Color sampledColour = new Color(data[sampleY][sampleX]);
+							red[y][x] = currentWeight * sampledColour.getRed();
+							green[y][x] = currentWeight * sampledColour.getGreen();
+							blue[y][x] = currentWeight * sampledColour.getBlue();
+						} catch (Exception e) {
+						}
 					}
 				}
-				newData[i][j] = new Color(getSumOfWeightedValues(red), getSumOfWeightedValues(green),
-						getSumOfWeightedValues(blue)).getRGB();
+				newData[i][j] = new Color((int) getSumOfWeightedValues(red), (int) getSumOfWeightedValues(green),
+						(int) getSumOfWeightedValues(blue)).getRGB();
 			}
 		}
 		return newData;
@@ -218,6 +227,7 @@ public class DepthMapDataUpdater extends Thread {
 		try {
 			Thread.sleep(time);
 		} catch (InterruptedException e) {
+			System.out.println("oh no");
 			e.printStackTrace();
 		}
 	}
