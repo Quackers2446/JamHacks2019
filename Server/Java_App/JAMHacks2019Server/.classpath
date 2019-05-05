@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<classpath>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-1.8">
+		<attributes>
+			<attribute name="org.eclipse.jdt.launching.CLASSPATH_ATTR_LIBRARY_PATH_ENTRY" value="JAMHacks2019Server/lib/natives"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry kind="src" path="src"/>
+	<classpathentry kind="lib" path="lib/jars/core.jar"/>
+	<classpathentry kind="lib" path="lib/jars/gluegen-rt-natives-linux-aarch64.jar"/>
+	<classpathentry kind="lib" path="lib/jars/gluegen-rt-natives-linux-amd64.jar"/>
+	<classpathentry kind="lib" path="lib/jars/gluegen-rt-natives-linux-armv6hf.jar"/>
+	<classpathentry kind="lib" path="lib/jars/gluegen-rt-natives-linux-i586.jar"/>
+	<classpathentry kind="lib" path="lib/jars/gluegen-rt-natives-macosx-universal.jar"/>
+	<classpathentry kind="lib" path="lib/jars/gluegen-rt-natives-windows-amd64.jar"/>
+	<classpathentry kind="lib" path="lib/jars/gluegen-rt-natives-windows-i586.jar"/>
+	<classpathentry kind="lib" path="lib/jars/gluegen-rt.jar"/>
+	<classpathentry kind="lib" path="lib/jars/jogl-all-natives-linux-aarch64.jar"/>
+	<classpathentry kind="lib" path="lib/jars/jogl-all-natives-linux-amd64.jar"/>
+	<classpathentry kind="lib" path="lib/jars/jogl-all-natives-linux-armv6hf.jar"/>
+	<classpathentry kind="lib" path="lib/jars/jogl-all-natives-linux-i586.jar"/>
+	<classpathentry kind="lib" path="lib/jars/jogl-all-natives-macosx-universal.jar"/>
+	<classpathentry kind="lib" path="lib/jars/jogl-all-natives-windows-amd64.jar"/>
+	<classpathentry kind="lib" path="lib/jars/jogl-all-natives-windows-i586.jar"/>
+	<classpathentry kind="lib" path="lib/jars/jogl-all.jar"/>
+	<classpathentry kind="lib" path="lib/jars/ufdw.jar"/>
+	<classpathentry kind="output" path="bin"/>
+</classpath>
