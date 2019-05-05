@@ -1,6 +1,7 @@
 package game;
 
 import kinect.DepthMapDataUpdater;
+import main.SandboxKinectApp;
 import processing.core.PApplet;
 import processing.core.PConstants;
 
@@ -12,9 +13,11 @@ public class Player extends Entity {
 	private String name;
 	private DepthMapDataUpdater depthMapUpdater;
 	private boolean[] actionData = new boolean[7];
+	private int direction = 1;
 
 	public Player(PApplet pApplet, DepthMapDataUpdater depthMapUpdater, float xPos, float yPos, String name, int id) {
 		super(pApplet, new Point(xPos, yPos, 0), id);
+		direction = -1 + (int) Math.random() * 3;
 		this.name = name;
 		this.depthMapUpdater = depthMapUpdater;
 	}
@@ -37,6 +40,32 @@ public class Player extends Entity {
 	public void update(boolean[] actionArray) {
 		actionData = actionArray;
 		update();
+	}
+
+	public void control() {
+		if (SandboxKinectApp.wPressed) {
+			setLocation(Point.getPointByAngleAndOffset2D(getLocation(), getAngle(), 1.5f));
+		}
+		if (SandboxKinectApp.aPressed) {
+			setLocation(Point.getPointByAngleAndOffset2D(getLocation(), getAngle() + PConstants.PI / 2, 1));
+		}
+		if (SandboxKinectApp.sPressed) {
+			setLocation(Point.getPointByAngleAndOffset2D(getLocation(), getAngle() + PConstants.PI, 0.8f));
+		}
+		if (SandboxKinectApp.dPressed) {
+			setLocation(Point.getPointByAngleAndOffset2D(getLocation(), getAngle() - PConstants.PI / 2, 1));
+		}
+		if (SandboxKinectApp.qPressed) {
+			setAngle(getAngle() + 0.01f);
+		}
+		if (SandboxKinectApp.ePressed) {
+			setAngle(getAngle() - 0.01f);
+		}
+	}
+
+	public void move() {
+		setLocation(Point.getPointByAngleAndOffset2D(getLocation(), getAngle(), 1));
+		setAngle(getAngle() + direction * 0.01f);
 	}
 
 	@Override

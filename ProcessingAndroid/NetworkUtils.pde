@@ -44,8 +44,8 @@ public static class NetworkUtils {
             movementData = byte(movementData ^ (1 << id));
         }
         println(socketID, movementData);
-        socketWriter.print(socketID);
-        socketWriter.println(movementData);
+        socketWriter.print(socketID + "");
+        socketWriter.println(Byte.toString(movementData));
     }
 
 }

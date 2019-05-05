@@ -1,6 +1,5 @@
 package main;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 
@@ -14,7 +13,7 @@ public class GameDataHandlerThread extends Thread {
 	private PApplet pApplet;
 	private DepthMapDataUpdater depthMapUpdater;
 	private ArrayList<String> actionData = new ArrayList<>();
-	
+
 	public GameDataHandlerThread(PApplet applet, DepthMapDataUpdater depthMapUpdater) {
 		pApplet = applet;
 		this.depthMapUpdater = depthMapUpdater;
@@ -22,9 +21,9 @@ public class GameDataHandlerThread extends Thread {
 
 	public void run() {
 		while (true) {
-			if(actionData.isEmpty()) {
-				sleep(10);				
-			}else {
+			if (actionData.isEmpty()) {
+				sleep(10);
+			} else {
 				parseLine(actionData.remove(0));
 			}
 		}
@@ -67,14 +66,15 @@ public class GameDataHandlerThread extends Thread {
 			e.printStackTrace();
 		}
 	}
-	
+
 	public static int requestIndex(String name) {
-		//Check through players to see if there is available current ID, and for  duplicate names
+		// Check through players to see if there is available current ID, and for
+		// duplicate names
 		return 0;
 	}
 
 	public void parseData(String[] data) {
-		for(String action: data) {
+		for (String action : data) {
 			actionData.add(action);
 		}
 	}
