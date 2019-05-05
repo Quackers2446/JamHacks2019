@@ -31,6 +31,9 @@ func ConnectionAcceptor(srv *serverData.Server, dataCh chan []byte, nameChan cha
 			fmt.Println(err)
 			panic("Error in accepting connection.")
 		}
+
+		fmt.Println("Got Connection!")
+
 		go handleConnection(connection, dataCh, nameChan, idChan, srv)
 	}
 
@@ -51,6 +54,9 @@ func handleConnection(conn net.Conn, ch chan []byte, nameChan chan string, idCha
 	for {
 		conn.SetReadDeadline(time.Now().Add(srv.TimeoutDuration))
 		bytes, _, err := bufReader.ReadLine()
+
+		fmt.Println("Received Data")
+
 		if err != nil {
 			fmt.Println(err)
 			return

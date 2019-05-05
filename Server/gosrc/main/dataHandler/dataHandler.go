@@ -37,7 +37,12 @@ func UpdateData(srv *serverData.Server, cmd *exec.Cmd, ch chan playerdata.Player
 ////////////////////////////
 ////////////////////////////
 
-func CommunicateData(srv *serverData.Server, ch chan playerdata.Player, chByte chan []byte, nameChan chan string, idChan chan byte) {
+func CommunicateData(srv *serverData.Server,
+	ch chan playerdata.Player,
+	chByte chan []byte,
+	nameChan chan string,
+	idChan chan byte) {
+
 	defer srv.Wg.Done()
 
 	for {
@@ -57,6 +62,9 @@ func CommunicateData(srv *serverData.Server, ch chan playerdata.Player, chByte c
 		case name := <-nameChan:
 			sent := false
 			possibleID := -1
+
+			fmt.Println("Checking for availability for user ", name)
+
 			for i := 0; i < len(srv.PlayerData); i++ {
 				if srv.PlayerData[i].Name == "" {
 					possibleID = i
@@ -76,6 +84,7 @@ func CommunicateData(srv *serverData.Server, ch chan playerdata.Player, chByte c
 
 			}
 			if possibleID >= 0 {
+				println("Allowing ", name, " to join the server")
 				srv.PlayerData[possibleID].ID = byte(possibleID)
 				srv.PlayerData[possibleID].Movement = 0
 				srv.PlayerData[possibleID].Name = name
@@ -84,9 +93,11 @@ func CommunicateData(srv *serverData.Server, ch chan playerdata.Player, chByte c
 
 			}
 
-			if sent {
-				srv.PlayerData = append(srv.PlayerData, playerdata.Player{Name: name, ID: byte(len(srv.PlayerData))})
+			if !sent {
+				srv.PlayerData = append(srv.PlayerData, playerdata.Player{Name: name,
+					ID: byte(len(srv.PlayerData))})
 				idChan <- byte(len(srv.PlayerData))
+				println("Allowing ", name, " to join the server")
 			}
 
 			DataUpdated = true
