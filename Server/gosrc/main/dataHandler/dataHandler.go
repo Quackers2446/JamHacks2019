@@ -57,8 +57,10 @@ func CommunicateData(srv *serverData.Server,
 			if data <= 127 {
 				srv.PlayerData[id].Movement = data
 			} else {
+				fmt.Println("User", srv.PlayerData[id].Name, "has disconnected")
 				srv.PlayerData[id].Name = ""
 				ch <- srv.PlayerData[id]
+				fmt.Println(id, "user should now be open")
 			}
 			DataUpdated = true
 
